@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Una sorpresa para ti 🐻</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F7F3ED; --blush: #E8C9B8; --rose: #C4785A;
+      --deep: #3B2A26; --gold: #C9A96E; --mist: #EDE8E0;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream); color: var(--deep);
+      font-family: 'Jost', sans-serif; font-weight: 300;
+      overflow-x: hidden;
+    }
+    #petals-canvas {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .leaf {
+      position: fixed; pointer-events: none; opacity: 0.06; z-index: 0; font-size: 5rem;
+    }
+    .leaf-1 { top: 4%; right: -0.5rem; transform: rotate(20deg); }
+    .leaf-2 { bottom: 8%; left: -0.5rem; transform: rotate(-30deg); }
+
+    /* HERO */
+    #hero {
+      position: relative; min-height: 100svh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 2rem; z-index: 1;
+    }
+    .envelope-wrap { margin-bottom: 2.5rem; cursor: pointer; user-select: none; }
+    .envelope {
+      width: 110px; height: 74px; position: relative;
+      filter: drop-shadow(0 6px 20px rgba(196,120,90,0.3));
+      transition: transform 0.3s ease;
+    }
+    .envelope:active { transform: scale(0.96); }
+    .env-body { position: absolute; inset: 0; background: var(--blush); border-radius: 2px 2px 6px 6px; }
+    .env-flap {
+      position: absolute; top: 0; left: 0; right: 0; height: 50%;
+      background: #DBAD96; clip-path: polygon(0 0, 100% 0, 50% 100%);
+      transform-origin: top center;
+      transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+    .envelope.open .env-flap { transform: rotateX(180deg); }
+    .env-left { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; background: #D4A090; clip-path: polygon(0 100%, 100% 0, 0 0); }
+    .env-right { position: absolute; bottom: 0; right: 0; width: 50%; height: 60%; background: #D4A090; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+    .env-seal {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 26px; height: 26px; background: var(--rose); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; z-index: 2; transition: opacity 0.3s;
+    }
+    .envelope.open .env-seal { opacity: 0; }
+
+    .hero-eyebrow {
+      font-weight: 200; font-size: 0.75rem; letter-spacing: 0.35em;
+      text-transform: uppercase; color: var(--rose); margin-bottom: 1rem;
+      opacity: 0; animation: fadeUp 1s 0.3s forwards;
+    }
+    h1.hero-title {
+      font-family: 'Cormorant Garamond', serif; font-weight: 300;
+      font-size: clamp(2.4rem, 9vw, 5rem); line-height: 1.15; color: var(--deep);
+      opacity: 0; animation: fadeUp 1s 0.6s forwards;
+    }
+    h1.hero-title em { font-style: italic; color: var(--rose); }
+    .hero-sub {
+      margin-top: 1.5rem; font-size: clamp(0.88rem, 3vw, 1rem);
+      color: #7A6259; max-width: 340px; line-height: 1.8;
+      opacity: 0; animation: fadeUp 1s 0.9s forwards;
+    }
+    .scroll-hint {
+      position: absolute; bottom: 2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--rose); opacity: 0; animation: fadeIn 1s 2s forwards;
+    }
+    .scroll-line {
+      width: 1px; height: 36px;
+      background: linear-gradient(to bottom, var(--rose), transparent);
+      animation: lineGrow 1.5s 2.2s infinite ease-in-out;
+    }
+
+    /* SECTIONS */
+    .wrap {
+      position: relative; z-index: 1;
+      padding: clamp(3.5rem, 8vw, 7rem) clamp(1.4rem, 5vw, 3.5rem);
+      max-width: 740px; margin: 0 auto;
+    }
+    .section-label {
+      font-size: 0.68rem; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;
+    }
+    h2.section-title {
+      font-family: 'Cormorant Garamond', serif; font-weight: 300;
+      font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.2; margin-bottom: 1.4rem;
+    }
+    h2.section-title em { font-style: italic; color: var(--rose); }
+    .body-text { font-size: clamp(0.9rem, 2.5vw, 1rem); line-height: 1.9; color: #5C4840; }
+    .divider { width: 50px; height: 1px; background: var(--gold); margin: 0 auto; opacity: 0.45; }
+
+    /* CARDS */
+    .details-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.2rem; margin-top: 2rem;
+    }
+    .detail-card {
+      background: white; border-radius: 14px; padding: 1.5rem 1.2rem; text-align: center;
+      box-shadow: 0 4px 20px rgba(59,42,38,0.07);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .detail-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(196,120,90,0.13); }
+    .detail-icon { font-size: 1.8rem; margin-bottom: 0.6rem; }
+    .detail-label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rose); margin-bottom: 0.3rem; }
+    .detail-value { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--deep); }
+
+    /* MALETA */
+    .maleta-bg { background: var(--mist); border-radius: 20px; }
+    .pack-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.85rem; margin-top: 1.8rem; }
+    .pack-list li { display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.94rem; line-height: 1.55; color: #5C4840; }
+    .pack-list li::before { content: '✦'; color: var(--gold); font-size: 0.55rem; margin-top: 0.4rem; flex-shrink: 0; }
+
+    /* TIMELINE */
+    .timeline { position: relative; margin-top: 2.2rem; padding-left: 1.8rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 1px;
+      background: linear-gradient(to bottom, var(--blush), var(--rose), var(--blush));
+    }
+    .tl-item { position: relative; margin-bottom: 2rem; }
+    .tl-item::before {
+      content: ''; position: absolute; left: -1.8rem; top: 6px;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--rose); border: 2px solid var(--cream);
+      box-shadow: 0 0 0 3px var(--blush);
+    }
+    .tl-time { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.2rem; }
+    .tl-event { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--deep); margin-bottom: 0.15rem; }
+    .tl-desc { font-size: 0.88rem; color: #7A6259; line-height: 1.6; }
+
+    /* FINAL */
+    .final-wrap { text-align: center; padding-bottom: 5rem; }
+    .final-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 6vw, 3.6rem);
+      font-style: italic; font-weight: 300; color: var(--deep); margin-bottom: 1.4rem;
+    }
+    .final-text { font-size: 0.98rem; color: #7A6259; line-height: 1.9; max-width: 420px; margin: 0 auto; }
+    .hearts { margin-top: 2rem; font-size: 1.4rem; letter-spacing: 0.35rem; animation: pulse 2s infinite; }
+
+    /* REVEAL */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.8s ease, transform 0.8s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes lineGrow { 0%,100%{transform:scaleY(0);transform-origin:top} 50%{transform:scaleY(1);transform-origin:top} }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.7;transform:scale(1.07)} }
+  </style>
+</head>
+<body>
+  <canvas id="petals-canvas"></canvas>
+  <div class="leaf leaf-1">🌿</div>
+  <div class="leaf leaf-2">🌿</div>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="envelope-wrap" onclick="this.querySelector('.envelope').classList.toggle('open')">
+      <div class="envelope">
+        <div class="env-body"></div>
+        <div class="env-left"></div>
+        <div class="env-right"></div>
+        <div class="env-flap"></div>
+        <div class="env-seal">🐻</div>
+      </div>
+    </div>
+    <p class="hero-eyebrow">Una sorpresa para ti</p>
+    <h1 class="hero-title">
+      Mi osito,<br>
+      <em>este sábado</em><br>
+      nos vamos a un<br>
+      <em>hotel rural 🌿</em>
+    </h1>
+    <p class="hero-sub">He preparado algo muy especial para los dos. Solo necesitas seguir leyendo…</p>
+    <div class="scroll-hint">
+      <span>descubrir</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- DESTINO -->
+  <div class="wrap reveal">
+    <p class="section-label">El destino</p>
+    <h2 class="section-title">Entre <em>plataneras</em><br>y jardines</h2>
+    <p class="body-text">
+      He reservado una noche en la <strong>Hacienda del Buen Suceso</strong>, un rincón mágico
+      rodeado de naturaleza donde el tiempo se para. Solo tú y yo, sin distracciones,
+      con todo el tiempo del mundo para estar juntos.
+    </p>
+    <div class="details-grid">
+      <div class="detail-card">
+        <div class="detail-icon">📅</div>
+        <div class="detail-label">Cuándo</div>
+        <div class="detail-value">Este sábado</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-icon">🌿</div>
+        <div class="detail-label">Dónde</div>
+        <div class="detail-value">Hacienda del Buen Suceso</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-icon">🌙</div>
+        <div class="detail-label">Cuánto</div>
+        <div class="detail-value">Una noche entera</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap reveal"><div class="divider"></div></div>
+
+  <!-- MALETA -->
+  <div class="wrap maleta-bg reveal">
+    <p class="section-label">Tu maleta</p>
+    <h2 class="section-title">Lo único que tienes<br><em>que hacer tú</em></h2>
+    <p class="body-text">De todo lo demás me encargo yo. Solo mete esto en una bolsa pequeña:</p>
+    <ul class="pack-list">
+      <li>Ropa cómoda para el sábado por la tarde</li>
+      <li>Algo bonito para la cena de noche</li>
+      <li>Tu pijama favorito</li>
+      <li>Bañador, por si hay piscina</li>
+      <li>Calzado cómodo para pasear</li>
+      <li>Ropa de gym (te tengo una sorpresa extra 💪)</li>
+      <li>Tus ganas de desconectar</li>
+      <li>Mucho amor para dar</li>
+      <li>Y nada más — ya lo tengo todo</li>
+    </ul>
+  </div>
+
+  <div class="wrap reveal"><div class="divider"></div></div>
+
+  <!-- ITINERARIO -->
+  <div class="wrap reveal">
+    <p class="section-label">El plan</p>
+    <h2 class="section-title">Nuestra <em>velada perfecta</em></h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time">Sábado · 16 h</div>
+        <div class="tl-event">Llegada y primer paseo</div>
+        <div class="tl-desc">Exploraremos juntos los jardines y las plataneras. Sin prisas, solo respirando el ambiente.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">Sábado · 18 h</div>
+        <div class="tl-event">Aperitivo en terraza</div>
+        <div class="tl-desc">Un brindis con cava viendo cómo cambia la luz. El mejor plan del mundo.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">Sábado · 19 h</div>
+        <div class="tl-event">Jacuzzi privado 🛁</div>
+        <div class="tl-desc">Tenemos el jacuzzi reservado solo para nosotros. Agua caliente, burbujas y música. Un momento solo para los dos.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">Sábado · 21 h</div>
+        <div class="tl-event">Cena romántica 🕯️</div>
+        <div class="tl-desc">Mesa reservada, buena comida, y mil cosas que contarnos. La noche es larga y nuestra.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">Sábado · noche</div>
+        <div class="tl-event">Paseo bajo las estrellas</div>
+        <div class="tl-desc">Por los jardines iluminados, de la mano, sin ningún sitio al que ir.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">Domingo · temprano</div>
+        <div class="tl-event">Gym en el hotel 💪</div>
+        <div class="tl-desc">Para los que no pueden parar ni de vacaciones. Una sesión rápida para activar el cuerpo.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">Domingo · mañana</div>
+        <div class="tl-event">Desayuno sin prisas ☀️</div>
+        <div class="tl-desc">El mejor desayuno del fin de semana. Tardamos todo lo que queramos.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap reveal"><div class="divider"></div></div>
+
+  <!-- FINAL -->
+  <div class="wrap final-wrap reveal">
+    <p class="final-title">Porque te mereces<br>todo esto y más.</p>
+    <p class="final-text">
+      Cada detalle lo he pensado para ti. Porque contigo cualquier momento se convierte
+      en algo especial, y quería devolverte aunque sea una pequeña parte de todo lo que
+      me das cada día.
+    </p>
+    <div class="hearts">🤍 🐻 🤍</div>
+  </div>
+
+  <script>
+    // PETALS
+    const canvas = document.getElementById('petals-canvas');
+    const ctx = canvas.getContext('2d');
+    let petals = [], W, H;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    function mkPetal() {
+      return { x: Math.random()*W, y:-20, size:Math.random()*9+5,
+        speed:Math.random()*1.1+0.35, drift:Math.random()*1.4-0.7,
+        angle:Math.random()*Math.PI*2, spin:(Math.random()-0.5)*0.04,
+        opacity:Math.random()*0.22+0.07,
+        color:['#E8C9B8','#D4A090','#C4785A','#F5DDD5'][Math.floor(Math.random()*4)] };
+    }
+    function draw(p) {
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.angle);
+      ctx.globalAlpha=p.opacity; ctx.fillStyle=p.color;
+      ctx.beginPath(); ctx.ellipse(0,0,p.size*.5,p.size,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+    }
+    (function loop() {
+      ctx.clearRect(0,0,W,H);
+      if (petals.length<26 && Math.random()<0.055) petals.push(mkPetal());
+      petals = petals.filter(p=>p.y<H+20);
+      petals.forEach(p=>{ p.y+=p.speed; p.x+=p.drift+Math.sin(p.y*.015)*.5; p.angle+=p.spin; draw(p); });
+      requestAnimationFrame(loop);
+    })();
+
+    // REVEAL ON SCROLL
+    const obs = new IntersectionObserver(entries=>{
+      entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+    },{threshold:0.1});
+    document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+  </script>
+</body>
+</html>
